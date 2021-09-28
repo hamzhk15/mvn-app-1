@@ -1,49 +1,50 @@
-def app
+pipeline{
 
-pipeline {
-    agent any
-    tools {
-    	maven 'maven-3-8-2'
-    	docker 'docker'
-    }
-    stages {
-        stage('Clone repository') {
-        	steps {
-        		checkout scm
-        	}
-	    }
+	agent all
 
-	    stage('Build image') {
-	  
-	       steps {
-        		script {
-        			app = docker.build("mvn-app-test")
-        		}
-        	}
-	    }
+	tools {
+    		maven 'maven-3-8-2'
+    		docker 'docker'
+    	}
+    	environment {
+		//DOCKERHUB_CREDENTIALS=credentials('dockerhub')
+	}
 
-	    stage('Test image') {
-	  
+	stages {
+	    
+	    stage('gitclone') {
 
-		steps {
-			script {
-        			app.inside {
-		    			sh 'echo "Tests passed"'
-		    		}
-		    	}
-        	}
-	    }
-
-	    stage('Push image') {
-		
-		steps {
-        		script {
-        			docker.withRegistry('https://192.168.100.143', 'git') {
-		    			app.push("${env.BUILD_NUMBER}")
-		    			app.push("latest")
-				}
+			steps {
+				checkout scm
 			}
-        	}
-	    }
-    }   
+		}
+
+		stage('Build') {
+
+			steps {
+				sh 'docker build -t 192.168.100.143/mvn-app-test:latest .'
+			}
+		}
+
+		stage('Login') {
+
+			steps {
+				//sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+			}
+		}
+
+		stage('Push') {
+
+			steps {
+				sh 'docker image push 192.168.100.143/mvn-app-test:latest'
+			}
+		}
+	}
+
+	post {
+		always {
+			sh 'docker logout'
+		}
+	}
+
 }
