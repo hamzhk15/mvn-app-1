@@ -8,30 +8,36 @@ pipeline {
     }
     stages {
         stage('Clone repository') {
-	      
-
-		checkout scm
+        	steps {
+        		checkout scm
+        	}
 	    }
 
 	    stage('Build image') {
 	  
-	       app = docker.build("brandonjones085/test")
+	       steps {
+        		app = docker.build("mvn-app-test")
+        	}
 	    }
 
 	    stage('Test image') {
 	  
 
-		app.inside {
-		    sh 'echo "Tests passed"'
-		}
+		steps {
+        		app.inside {
+		    		sh 'echo "Tests passed"'
+		    	}
+        	}
 	    }
 
 	    stage('Push image') {
 		
-		docker.withRegistry('https://registry.hub.docker.com', 'git') {
-		    app.push("${env.BUILD_NUMBER}")
-		    app.push("latest")
-		}
+		steps {
+        		docker.withRegistry('https://192.168.100.143', 'git') {
+		    		app.push("${env.BUILD_NUMBER}")
+		    		app.push("latest")
+			}
+        	}
 	    }
     }   
 }
