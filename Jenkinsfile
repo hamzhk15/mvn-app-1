@@ -16,7 +16,9 @@ pipeline {
 	    stage('Build image') {
 	  
 	       steps {
-        		app = docker.build("mvn-app-test")
+        		script {
+        			app = docker.build("mvn-app-test")
+        		}
         	}
 	    }
 
@@ -24,8 +26,10 @@ pipeline {
 	  
 
 		steps {
-        		app.inside {
-		    		sh 'echo "Tests passed"'
+			script {
+        			app.inside {
+		    			sh 'echo "Tests passed"'
+		    		}
 		    	}
         	}
 	    }
@@ -33,9 +37,11 @@ pipeline {
 	    stage('Push image') {
 		
 		steps {
-        		docker.withRegistry('https://192.168.100.143', 'git') {
-		    		app.push("${env.BUILD_NUMBER}")
-		    		app.push("latest")
+        		script {
+        			docker.withRegistry('https://192.168.100.143', 'git') {
+		    			app.push("${env.BUILD_NUMBER}")
+		    			app.push("latest")
+				}
 			}
         	}
 	    }
