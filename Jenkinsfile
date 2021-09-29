@@ -1,6 +1,6 @@
 pipeline{
 
-	agent all
+	agent any
 
     	environment {
 		DOCKERHUB_CREDENTIALS=credentials('git')
