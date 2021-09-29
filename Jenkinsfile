@@ -1,23 +1,46 @@
-node {    
-      def app     
-      stage('Clone repository') {               
-             
-            checkout scm    
-      }     
-      stage('Build image') {         
-       
-            app = docker.build("hamzhkoujan/ksa-lab:latest")    
-       }     
-      stage('Test image') {           
-            app.inside {            
-             
-             sh 'echo "Tests passed"'        
-            }    
-        }     
-       stage('Push image') {
-       	docker.withRegistry('https://registry.hub.docker.com', 'git') {            
-       		app.push("${env.BUILD_NUMBER}")            
-       		app.push("latest")        
-        }    
-       }
-   }
+pipeline{
+
+	agent all
+
+    	environment {
+		DOCKERHUB_CREDENTIALS=credentials('git')
+	}
+
+	stages {
+	    
+	    stage('gitclone') {
+
+			steps {
+				checkout scm
+			}
+		}
+
+		stage('Build') {
+
+			steps {
+				sh 'docker build -t hamzhkoujan/ksa-lab:latest .'
+			}
+		}
+
+		stage('Login') {
+
+			steps {
+				sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+			}
+		}
+
+		stage('Push') {
+
+			steps {
+				sh 'docker image push hamzhkoujan/ksa-lab:latest'
+			}
+		}
+	}
+
+	post {
+		always {
+			sh 'docker logout'
+		}
+	}
+
+}
